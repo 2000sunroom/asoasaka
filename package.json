@@ -1,0 +1,16 @@
+{
+  "name": "asoasaka-pedometer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "万歩計Webアプリ - Turso + Vercel",
+  "scripts": {
+    "setup-db": "node scripts/setup-db.js",
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  },
+  "devDependencies": {
+    "vercel": "^39.0.0"
+  }
+}
