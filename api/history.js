@@ -1,4 +1,16 @@
-const { getClient } = require('../lib/db');
+const { createClient } = require('@libsql/client/web');
+
+let client = null;
+function getDB() {
+  if (!client) {
+    const url = (process.env.TURSO_DATABASE_URL || '').trim().replace('libsql://', 'https://');
+    client = createClient({
+      url,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+  }
+  return client;
+}
 
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
@@ -9,11 +21,11 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const db = getClient();
+  const db = getDB();
   const { deviceId, days } = req.query;
 
   if (!deviceId) {
-    return res.status(400).json({ error: 'deviceId は必須です' });
+    return res.status(400).json({ error: 'deviceId is required' });
   }
 
   const numDays = parseInt(days) || 7;

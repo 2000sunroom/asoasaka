@@ -1,18 +1,30 @@
-const { getClient } = require('../lib/db');
+const { createClient } = require('@libsql/client/web');
+
+let client = null;
+function getDB() {
+  if (!client) {
+    const url = (process.env.TURSO_DATABASE_URL || '').trim().replace('libsql://', 'https://');
+    client = createClient({
+      url,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+  }
+  return client;
+}
 
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  const db = getClient();
+  const db = getDB();
 
   try {
     if (req.method === 'GET') {
       const { deviceId } = req.query;
 
       if (!deviceId) {
-        return res.status(400).json({ error: 'deviceId は必須です' });
+        return res.status(400).json({ error: 'deviceId is required' });
       }
 
       const result = await db.execute({
@@ -30,7 +42,7 @@ module.exports = async function handler(req, res) {
       const { deviceId, goal, stride, weight, sensitivity } = req.body;
 
       if (!deviceId) {
-        return res.status(400).json({ error: 'deviceId は必須です' });
+        return res.status(400).json({ error: 'deviceId is required' });
       }
 
       await db.execute({

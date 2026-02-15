@@ -1,19 +1,30 @@
-const { getClient } = require('../lib/db');
+const { createClient } = require('@libsql/client/web');
+
+let client = null;
+function getDB() {
+  if (!client) {
+    const url = (process.env.TURSO_DATABASE_URL || '').trim().replace('libsql://', 'https://');
+    client = createClient({
+      url,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+  }
+  return client;
+}
 
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  const db = getClient();
+  const db = getDB();
 
   try {
     if (req.method === 'POST') {
-      // 歩数を保存 (upsert)
       const { deviceId, date, steps, goal } = req.body;
 
       if (!deviceId || !date) {
-        return res.status(400).json({ error: 'deviceId と date は必須です' });
+        return res.status(400).json({ error: 'deviceId and date are required' });
       }
 
       await db.execute({
@@ -28,11 +39,10 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true });
 
     } else if (req.method === 'GET') {
-      // 今日の歩数を取得
       const { deviceId, date } = req.query;
 
       if (!deviceId || !date) {
-        return res.status(400).json({ error: 'deviceId と date は必須です' });
+        return res.status(400).json({ error: 'deviceId and date are required' });
       }
 
       const result = await db.execute({
